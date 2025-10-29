@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Checkout Sistema Cashout ✔</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* === seu design original (mantido) === */
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;min-height:100vh;display:flex;justify-content:center;align-items:center;padding:20px;background:linear-gradient(135deg,#000000,#0a0a0a,#0f2027);color:#e0e0e0}
+.container{width:100%;max-width:480px;background:#1a1a1a;border-radius:16px;padding:32px;box-shadow:0 6px 20px rgba(0,255,128,.2);animation:fadeIn .5s ease-in-out;transition:.3s;text-align:center}
+@keyframes fadeIn{from{opacity:0;transform:translateY(15px)}to{opacity:1;transform:translateY(0)}}
+.logo{margin-bottom:20px}.logo-text{font-size:22px;font-weight:700;color:#00ff88;text-shadow:0 0 8px #00ff88,0 0 12px #00ff88;letter-spacing:1px}
+h1{font-size:20px;font-weight:600;margin-bottom:12px;color:#fff;display:flex;align-items:center;justify-content:center;gap:8px}
+h1 svg{width:22px;height:22px;fill:#00ff88}
+p{font-size:14.5px;margin-bottom:24px;color:#ccc}
+.amount-highlight{font-size:20px;color:#00ff88;font-weight:700;background:#111;padding:12px;border-radius:12px;border:2px solid #00ff88;box-shadow:0 0 12px rgba(0,255,136,.5);text-align:center;margin-bottom:16px}
+.form-group{margin-bottom:16px;text-align:left}
+label{display:block;margin-bottom:8px;font-size:14px;font-weight:500;color:#ccc}
+input{width:100%;padding:12px 14px;font-size:16px;border:1px solid #444;border-radius:10px;outline:none;background:#222;color:#fff;transition:.2s}
+input:focus{border-color:#00ff88;box-shadow:0 0 0 2px rgba(0,255,136,.3)}
+button{width:100%;padding:14px;background:linear-gradient(135deg,#00ff88,#008844);color:#000;border:none;border-radius:10px;font-size:16px;font-weight:700;cursor:pointer;transition:.25s;letter-spacing:.3px}
+button:hover{background:linear-gradient(135deg,#00ff88,#00cc66);transform:translateY(-1px)}
+button:disabled{background:#333;color:#777;cursor:not-allowed;transform:none}
+.message{margin-top:12px;padding:10px;border-radius:10px;font-size:14px;text-align:center;font-weight:500}
+.success{background:#003300;color:#00ff88;border:1px solid #00ff88}
+.error{background:#330000;color:#ff5555;border:1px solid #ff5555}
+.loader{display:none;text-align:center;margin:12px 0}
+.loader:after{content:" ";width:22px;height:22px;border:3px solid #222;border-top:3px solid #00ff88;border-radius:50%;display:inline-block;animation:spin 1s linear infinite;margin-left:10px}
+@keyframes spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
+.footer{margin-top:18px;text-align:center;font-size:12px;color:#00ff88;font-weight:500}
+.footer strong{color:#fff}
+
+/* === sino profissional criado do zero === */
+.nav{position:fixed;top:18px;right:18px;z-index:1200;display:flex;flex-direction:column;align-items:flex-end}
+.bell-wrap{width:56px;height:56px;border-radius:50%;background:linear-gradient(180deg,#0f1310,#08100b);border:1px solid rgba(0,255,136,.06);display:flex;align-items:center;justify-content:center;box-shadow:0 6px 18px rgba(0,0,0,.6),0 0 20px rgba(0,255,136,.04);cursor:pointer;position:relative;overflow:visible;transition:transform .18s ease,box-shadow .18s ease}
+.bell-wrap:hover{transform:translateY(-3px);box-shadow:0 12px 30px rgba(0,255,136,.12)}
+.bell-glow{position:absolute;inset:-8px;border-radius:50%;pointer-events:none;box-shadow:0 0 12px rgba(0,255,136,.06),0 0 28px rgba(0,255,136,.03);opacity:0;transition:opacity .25s ease}
+.bell-wrap.attention .bell-glow{opacity:1;animation:glowPulse 1.4s ease-in-out 2}
+@keyframes glowPulse{0%{transform:scale(.95);opacity:.95}50%{transform:scale(1.08);opacity:1}100%{transform:scale(.95);opacity:.95}}
+.badge{position:absolute;top:-8px;right:-8px;background:#00ff88;color:#001;padding:5px 8px;border-radius:999px;font-size:12px;font-weight:700;box-shadow:0 6px 18px rgba(0,255,136,.12);display:none;color:#041}
+
+/* ring animation */
+.bell-wrap.ring{animation:ring 0.7s ease 1}
+@keyframes ring{0%{transform:rotate(0)}15%{transform:rotate(12deg)}30%{transform:rotate(-10deg)}45%{transform:rotate(6deg)}60%{transform:rotate(-4deg)}75%{transform:rotate(2deg)}100%{transform:rotate(0)}}
+
+/* painel de notificações (igual estilo anterior) */
+.notif-panel{position:fixed;top:82px;right:18px;width:320px;background:#111;border:1px solid rgba(255,255,255,.03);border-radius:12px;box-shadow:0 14px 40px rgba(2,6,23,0.6);padding:12px;display:none;z-index:1201}
+.notif-panel h4{margin:0 0 8px 0;color:#00ff88;font-weight:700}
+.notif-list{max-height:320px;overflow:auto;padding-right:4px}
+.notif-item{background:#0f1111;padding:10px;border-radius:8px;margin-bottom:10px;border-left:3px solid #00ff88;color:#dfffe0;font-size:14px}
+.notif-item.error{border-left-color:#ff5a5a;color:#ffd0d0}
+.notif-muted{color:#94a3b8;font-size:13px;padding:8px}
+
+/* voucher box in main area */
+.voucher-box{margin-top:14px;background:linear-gradient(180deg,#0f1311,#0b0f0c);padding:12px;border-radius:10px;border:1px solid rgba(0,255,136,.06);display:none}
+.voucher-code{font-weight:800;color:#00ff88;font-size:18px;letter-spacing:1px}
+.copy-btn{margin-top:8px;padding:8px 10px;border-radius:8px;border:0;background:#00ff88;color:#001;font-weight:700;cursor:pointer}
+
+/* responsive */
+@media(max-width:520px){
+  .notif-panel{right:10px;left:10px;width:auto}
+  .nav{right:10px}
+  .bell-wrap{width:48px;height:48px}
+}
+</style>
+</head>
+<body>
+
+<!-- ÁUDIO EMBUTIDO (base64) - toque metálico curto -->
+<audio id="notifSound" preload="auto">
+  <source src="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAIlYAAESsAAACABAAZGF0YQAAAAA=" type="audio/wav">
+  <!-- fallback vazio -->
+</audio>
+
+<!-- NOTIFICAÇÃO FIXA -->
+<div class="nav" aria-hidden="false">
+  <div id="bell" class="bell-wrap" role="button" aria-label="Notificações" tabindex="0">
+    <div class="bell-glow" aria-hidden="true"></div>
+    <!-- sino SVG criado do zero -->
+    <svg width="28" height="28" viewBox="0 0 24 24" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+      <defs><linearGradient id="g1" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#b7ffcf"/><stop offset="1" stop-color="#00ff88"/></linearGradient></defs>
+      <path d="M12 2C9.243 2 7 4.243 7 7v3.586L5.293 12.293A1 1 0 006 14h12a1 1 0 00.707-1.707L17 10.586V7c0-2.757-2.243-5-5-5z" fill="url(#g1)"></path>
+      <path d="M8.5 17a3.5 3.5 0 007 0" stroke="#081010" stroke-width="1.2" stroke-linecap="round"></path>
+    </svg>
+    <div id="badge" class="badge" aria-hidden="true">0</div>
+  </div>
+
+  <div id="notifPanel" class="notif-panel" role="menu" aria-hidden="true">
+    <h4>Notificações</h4>
+    <div id="notifList" class="notif-list">
+      <div class="notif-muted">Nenhuma notificação ainda.</div>
+    </div>
+  </div>
+</div>
+
+<!-- SEU LAYOUT ORIGINAL -->
+<div class="container" role="main" aria-labelledby="pageTitle">
+  <div class="logo"><div class="logo-text">VOUCHER PAY</div></div>
+  <h1 id="pageTitle">PAGAMENTO SEGURO
+    <svg viewBox="0 0 24 24" style="width:18px;height:18px;vertical-align:middle;margin-left:6px;"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" fill="#00ff88"></path></svg>
+  </h1>
+
+  <div class="amount-highlight">Valor a pagar: 559 MZN</div>
+  <p>Voucher do Predictor será enviado após pagamento</p>
+
+  <div class="form-group">
+    <label for="phone">Número de pagamento (84, 85)</label>
+    <input type="text" id="phone" placeholder="84*******" maxlength="9" inputmode="numeric"/>
+  </div>
+
+  <button id="payBtn" onclick="pay()">💳 Pagar Agora</button>
+  <div class="loader" id="loader" aria-hidden="true"></div>
+
+  <!-- Voucher exibido na área principal -->
+  <div id="voucherBox" class="voucher-box" role="status" aria-live="polite">
+    <div>Seu voucher:</div>
+    <div id="voucherCode" class="voucher-code">By1234</div>
+    <button id="copyBtn" class="copy-btn" aria-label="Copiar voucher">Copiar</button>
+  </div>
+
+  <div id="result" role="status" aria-live="polite" style="margin-top:10px"></div>
+  <div class="footer">© <strong>Eloon Musk</strong> - dev</div>
+</div>
+
+<script>
+/* === configuração GibraPay (mantida) === */
+const API_KEY = "05747a33f80c6ece482480f63538dd640107b08573654057f52f06f418b3f07e9b8e98e500fc11f64842705d0c7b1931ed87ef8f465b73f78df9c70c83a1c73c";
+const WALLET_ID = "69bd9968-dac3-4e5e-a94c-13de234af16e";
+const FIXED_AMOUNT = 559;
+const VOUCHER = "By1234";
+
+/* === state + DOM refs === */
+const bell = document.getElementById('bell');
+const badge = document.getElementById('badge');
+const notifPanel = document.getElementById('notifPanel');
+const notifList = document.getElementById('notifList');
+const sound = document.getElementById('notifSound');
+const voucherBox = document.getElementById('voucherBox');
+const voucherCodeEl = document.getElementById('voucherCode');
+const copyBtn = document.getElementById('copyBtn');
+const loader = document.getElementById('loader');
+const resultEl = document.getElementById('result');
+const payBtn = document.getElementById('payBtn');
+const phoneInput = document.getElementById('phone');
+
+let notifications = []; // array {title, body, time, type, id}
+let unreadCount = 0;
+
+/* === localStorage keys === */
+const LS_KEY_NOTIFS = 'pa_notifs_v1';
+const LS_KEY_UNREAD = 'pa_notifs_unread_v1';
+const LS_KEY_LASTVOUCHER = 'pa_last_voucher_v1';
+
+/* === util: formato hora PT-BR simples === */
+function nowStr(){ return new Date().toLocaleString('pt-BR'); }
+
+/* === persistência === */
+function loadState(){
+  try{
+    const raw = localStorage.getItem(LS_KEY_NOTIFS);
+    notifications = raw ? JSON.parse(raw) : [];
+    const u = localStorage.getItem(LS_KEY_UNREAD);
+    unreadCount = u ? parseInt(u,10) : 0;
+    const last = localStorage.getItem(LS_KEY_LASTVOUCHER);
+    if(last){
+      showVoucher(last);
+    } else {
+      hideVoucher();
+    }
+  }catch(e){
+    notifications = [];
+    unreadCount = 0;
+  }
+  renderNotifList();
+}
+
+/* grava estado */
+function saveState(){
+  try{
+    localStorage.setItem(LS_KEY_NOTIFS, JSON.stringify(notifications));
+    localStorage.setItem(LS_KEY_UNREAD, String(unreadCount));
+  }catch(e){
+    // se localStorage falhar, não é crítico
+    console.warn('Não foi possível salvar notificações:', e);
+  }
+}
+
+/* === render notifs and badge === */
+function renderNotifList(){
+  if(!notifications || notifications.length === 0){
+    notifList.innerHTML = '<div class="notif-muted">Nenhuma notificação ainda.</div>';
+  } else {
+    notifList.innerHTML = notifications.map(n=>{
+      const cls = n.type === 'error' ? 'notif-item error' : 'notif-item';
+      return `<div class="${cls}" data-id="${n.id}">
+                <div style="font-weight:700">${escapeHtml(n.title)}</div>
+                <div style="margin-top:6px">${escapeHtml(n.body)}</div>
+                <div style="margin-top:6px;color:#94a3b8;font-size:12px">${escapeHtml(n.time)}</div>
+              </div>`;
+    }).join('');
+  }
+  // badge
+  if(unreadCount > 0){
+    badge.style.display = 'inline-block';
+    badge.textContent = String(unreadCount);
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
+/* === proteção básica ao injetar HTML === */
+function escapeHtml(s){ return String(s).replace(/[&<>"'`=\/]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','/':'&#47;','=':'&#61;','`':'&#96;'}[c];}); }
+
+/* === adicionar notificação (nova) === */
+function addNotification(title, body, type='success', persist=true, markUnread=true){
+  const id = 'n_' + Date.now() + '_' + Math.floor(Math.random()*1000);
+  const item = {id, title, body, time: nowStr(), type};
+  notifications.unshift(item);
+  if(notifications.length > 100) notifications.splice(100); // limite simples
+  if(markUnread) unreadCount++;
+  if(persist) saveState();
+  renderNotifList();
+
+  // animação/sonoro
+  bell.classList.add('attention','ring');
+  setTimeout(()=>bell.classList.remove('ring'),900);
+  setTimeout(()=>bell.classList.remove('attention'),1600);
+
+  // tocar som
+  try{ sound.currentTime = 0; sound.play().catch(()=>{}); }catch(e){}
+
+  // abrir painel brevemente para visibilidade (apenas para novas notificações)
+  notifPanel.style.display = 'block';
+  notifPanel.setAttribute('aria-hidden','false');
+
+  // se o user abriu o painel (we'll hide and mark read after brief timeout)
+  setTimeout(()=>{ notifPanel.style.display = 'none'; notifPanel.setAttribute('aria-hidden','true'); }, 1600);
+}
+
+/* === ao abrir painel: marcar tudo como lido (badge some) === */
+function markAllRead(){
+  unreadCount = 0;
+  saveState();
+  renderNotifList();
+}
+
+/* === mostrar/ocultar painel ao clicar no sino === */
+function togglePanel(e){
+  e.stopPropagation();
+  const shown = notifPanel.style.display === 'block';
+  if(shown){
+    notifPanel.style.display = 'none';
+    notifPanel.setAttribute('aria-hidden','true');
+  } else {
+    notifPanel.style.display = 'block';
+    notifPanel.setAttribute('aria-hidden','false');
+    // quando abre, marcar as notificações como lidas (badge dispara desaparecer)
+    markAllRead();
+  }
+}
+
+/* === fechar painel ao clicar fora === */
+document.addEventListener('click', function(ev){
+  if(!notifPanel.contains(ev.target) && !bell.contains(ev.target)){
+    notifPanel.style.display = 'none';
+    notifPanel.setAttribute('aria-hidden','true');
+  }
+});
+
+/* === Entrada: notificação informativa automática === */
+document.addEventListener('DOMContentLoaded', function(){
+  loadState();
+  // se ainda não houver essa notificação informativa inicial, adicionamos (evitar duplicatas)
+  const exist = notifications.some(n => n.title && n.title.includes('Informação') && n.body && n.body.includes('O seu voucher'));
+  if(!exist){
+    addNotification('🔔 Informação', 'O seu voucher será enviado aqui após o pagamento.', 'info', true, true);
+  } else {
+    // se já existe, só garantir render e badge
+    renderNotifList();
+  }
+});
+
+/* === mostrar voucher na área principal === */
+function showVoucher(code){
+  voucherBox.style.display = 'block';
+  voucherCodeEl.textContent = code;
+  localStorage.setItem(LS_KEY_LASTVOUCHER, code);
+}
+function hideVoucher(){
+  voucherBox.style.display = 'none';
+  localStorage.removeItem(LS_KEY_LASTVOUCHER);
+}
+
+/* copiar voucher (apenas o código) */
+copyBtn.addEventListener('click', async function(){
+  const code = voucherCodeEl.textContent.trim();
+  try{
+    await navigator.clipboard.writeText(code);
+    // feedback breve
+    const previous = copyBtn.textContent;
+    copyBtn.textContent = 'Copiado!';
+    setTimeout(()=> copyBtn.textContent = previous, 1400);
+  }catch(e){
+    // fallback
+    const ta = document.createElement('textarea'); ta.value = code; document.body.appendChild(ta); ta.select();
+    try{ document.execCommand('copy'); }catch(e){}
+    ta.remove();
+    copyBtn.textContent = 'Copiado!';
+    setTimeout(()=> copyBtn.textContent = 'Copiar', 1400);
+  }
+});
+
+/* === função pagar: integra com gibrapay (mantida) === */
+async function pay(){
+  // ui
+  resultEl.innerHTML = '';
+  showLoader(true);
+  payBtn.disabled = true;
+
+  const phone = phoneInput.value.replace(/\s+/g,'');
+  if(!/^(84|85|86|87)\d{7}$/.test(phone)){
+    showLoader(false);
+    payBtn.disabled = false;
+    resultEl.className = 'message error';
+    resultEl.textContent = 'Número inválido. Use 84, 85, 86 ou 87.';
+    addNotification('Pagamento Falhou', 'Número inválido. Pagamento não verificado.', 'error', true, true);
+    return;
+  }
+
+  // voucher fixo pedido pelo cliente
+  const voucher = VOUCHER;
+
+  try{
+    const payload = {
+      wallet_id: WALLET_ID,
+      amount: FIXED_AMOUNT,
+      number_phone: phone,
+      alert_sms: {
+        api_key: "2321:rTe9Gp-bkT7xs-3maVnL-zqLkP3",
+        sender_id: "PAGAMENTO",
+        phone: "852154364",
+        phone_customer: phone,
+        message: `Pagamento de ${FIXED_AMOUNT} MZN confirmado.`,
+        customer_message: `Seu Voucher foi entregue: ${voucher}`
+      }
+    };
+
+    const res = await fetch("https://gibrapay.online/v1/transfer", {
+      method: "POST",
+      headers: {"Content-Type":"application/json","API-Key": API_KEY},
+      body: JSON.stringify(payload)
+    });
+
+    let data;
+    try{ data = await res.json(); } catch(e){ data = { status: 'error', message: 'Resposta inválida do servidor' }; }
+
+    if(data && data.status === 'success'){
+      // sucesso
+      resultEl.className = 'message success';
+      resultEl.textContent = `✅ Pagamento de ${FIXED_AMOUNT} MZN realizado! Seu voucher: ${voucher}`;
+      // mostrar voucher no corpo e persistir
+      showVoucher(voucher);
+      addNotification('Voucher Enviado', `Pagamento confirmado! Voucher: ${voucher}`, 'success', true, true);
+      phoneInput.value = '';
+    } else {
+      // falha
+      const msg = (data && data.message) ? data.message : 'Pagamento não verificado com sucesso';
+      resultEl.className = 'message error';
+      resultEl.textContent = `❌ ${msg}`;
+      addNotification('Pagamento Falhou', 'Pagamento não verificado com sucesso.', 'error', true, true);
+    }
+  }catch(err){
+    console.error(err);
+    resultEl.className = 'message error';
+    resultEl.textContent = '❌ Erro de conexão. Tente novamente.';
+    addNotification('Erro de Conexão', 'Não foi possível verificar o pagamento.', 'error', true, true);
+  }finally{
+    showLoader(false);
+    payBtn.disabled = false;
+  }
+}
+
+/* mostrar/ocultar loader */
+function showLoader(show){
+  loader.style.display = show ? 'inline-block' : 'none';
+}
+
+/* tecla Enter no input dispara pagamento */
+phoneInput.addEventListener('keydown', function(e){
+  if(e.key === 'Enter') pay();
+});
+
+/* clicar no sino abre/fecha painel e marca como lido */
+bell.addEventListener('click', function(e){ togglePanel(e); });
+
+/* teclado: abrir painel com Enter/Space */
+bell.addEventListener('keydown', function(e){
+  if(e.key === 'Enter' || e.key === ' ') { e.preventDefault(); togglePanel(e); }
+});
+
+/* togglePanel function extracted to allow reuse */
+function togglePanel(e){
+  e.stopPropagation();
+  const shown = notifPanel.style.display === 'block';
+  if(shown){
+    notifPanel.style.display = 'none';
+    notifPanel.setAttribute('aria-hidden','true');
+  } else {
+    notifPanel.style.display = 'block';
+    notifPanel.setAttribute('aria-hidden','false');
+    // ao abrir, marcar como lido
+    markAllRead();
+  }
+}
+
+/* marcar todas como lidas (badge some) */
+function markAllRead(){
+  unreadCount = 0;
+  saveState();
+  renderNotifList();
+}
+
+/* carregar estado inicial */
+loadState();
+
+/* === Limpar notificações (opcional - não exibido UI) === */
+function clearNotifications(){ notifications = []; unreadCount = 0; saveState(); renderNotifList(); hideVoucher(); }
+
+/* === end === */
+</script>
+</body>
+</html>
